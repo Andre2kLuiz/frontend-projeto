@@ -5,21 +5,15 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { FileUpload } from 'primereact/fileupload';
-import { InputNumber, InputNumberValueChangeEvent } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton';
-import { Rating } from 'primereact/rating';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
-import React, { useEffect, useRef, useState } from 'react';
-import { ProductService } from '../../../../demo/service/ProductService';
-import { Demo } from '@/types';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { UsuarioService } from '@/service/UsuarioService';
 
 /* @todo Used 'as any' for types here. Will fix in next version due to onSelectionChange event type issue. */
-const Crud = () => {
+const Usuario = () => {
     let usuarioVazio: Projeto.Usuario = {
         nome: '',
         login: '',
@@ -37,6 +31,7 @@ const Crud = () => {
     const [globalFilter, setGlobalFilter] = useState('');
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<any>>(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const usuarioService = new UsuarioService();
 
     useEffect(() => {
@@ -49,7 +44,7 @@ const Crud = () => {
             .catch((error) => {
                 console.log(error);
             });
-    }, [usuarios]);
+    }, [usuarioService, usuarios]);
 
     const openNew = () => {
         saveUsuario(usuarioVazio);
@@ -77,7 +72,7 @@ const Crud = () => {
                 .then((responce) => {
                     setUsuarioDialog(false);
                     setUsuario(usuarioVazio);
-                    toast.current.show({
+                    toast.current?.show({
                         severity: 'info',
                         summary: 'Informação',
                         detail: 'Usuário cadastrado com sucesso!',
@@ -85,7 +80,7 @@ const Crud = () => {
                     });
                 })
                 .catch((error) => {
-                    toast.current.show({
+                    toast.current?.show({
                         severity: 'error',
                         summary: 'Erro!',
                         detail: 'Erro ao salvar!' + error,
@@ -98,7 +93,7 @@ const Crud = () => {
                 .then((responce) => {
                     setUsuarioDialog(false);
                     setUsuario(usuarioVazio);
-                    toast.current.show({
+                    toast.current?.show({
                         severity: 'info',
                         summary: 'Informação',
                         detail: 'Usuário alterado com sucesso!',
@@ -106,7 +101,7 @@ const Crud = () => {
                     });
                 })
                 .catch((error) => {
-                    toast.current.show({
+                    toast.current?.show({
                         severity: 'error',
                         summary: 'Erro!',
                         detail: 'Erro ao alterar!' + error,
@@ -127,26 +122,28 @@ const Crud = () => {
     };
 
     const deleteUsuario = () => {
-        usuarioService
-            .excluir(usuario.id)
-            .then((responce) => {
-                setUsuario(usuarioVazio);
-                setDeleteUsuarioDialog(false);
-                toast.current?.show({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Usuario deletado com sucesso!',
-                    life: 3000
+        if (usuario.id) {
+            usuarioService
+                .excluir(usuario.id)
+                .then((responce) => {
+                    setUsuario(usuarioVazio);
+                    setDeleteUsuarioDialog(false);
+                    toast.current?.show({
+                        severity: 'success',
+                        summary: 'Successful',
+                        detail: 'Usuario deletado com sucesso!',
+                        life: 3000
+                    });
+                })
+                .catch((error) => {
+                    toast.current?.show({
+                        severity: 'error',
+                        summary: 'Erro!',
+                        detail: 'Erro ao deletar usuario!',
+                        life: 3000
+                    });
                 });
-            })
-            .catch((error) => {
-                toast.current?.show({
-                    severity: 'error',
-                    summary: 'Erro!',
-                    detail: 'Erro ao deletar usuario!',
-                    life: 3000
-                });
-            });
+        }
     };
 
     const exportCSV = () => {
@@ -157,18 +154,7 @@ const Crud = () => {
         setDeleteUsuariosDialog(true);
     };
 
-    const deleteSelectedUsuarios = () => {
-        /*let _products = (products as any)?.filter((val: any) => !(selectedProducts as any)?.includes(val));
-        setProducts(_products);
-        setDeleteProductsDialog(false);
-        setSelectedProducts(null);
-        toast.current?.show({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Products Deleted',
-            life: 3000
-        });*/
-    };
+    const deleteSelectedUsuarios = () => {};
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, nome: string) => {
         const val = (e.target && e.target.value) || '';
@@ -177,14 +163,6 @@ const Crud = () => {
 
         setUsuario(_usuarios);
     };
-
-    /*const onInputNumberChange = (e: InputNumberValueChangeEvent, name: string) => {
-        const val = e.value || 0;
-        let _product = { ...product };
-        _product[`${name}`] = val;
-
-        setProduct(_product);
-    };*/
 
     const leftToolbarTemplate = () => {
         return (
@@ -397,4 +375,4 @@ const Crud = () => {
     );
 };
 
-export default Crud;
+export default Usuario;
