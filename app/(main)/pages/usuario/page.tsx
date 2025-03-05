@@ -21,33 +21,35 @@ const Usuario = () => {
         email: ''
     };
 
-    const [usuarios, setUsuarios] = useState(null);
+    const [usuarios, setUsuarios] = useState<Projeto.Usuario[] | null>(null);
     const [usuarioDialog, setUsuarioDialog] = useState(false);
     const [deleteUsuariosDialog, setDeleteUsuariosDialog] = useState(false);
     const [deleteUsuarioDialog, setDeleteUsuarioDialog] = useState(false);
     const [usuario, setUsuario] = useState<Projeto.Usuario>(usuarioVazio);
-    const [selectedUsuarios, setSelectedUsuarios] = useState(null);
+    const [selectedUsuarios, setSelectedUsuarios] = useState<Projeto.Usuario[]>([]);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<any>>(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const usuarioService = new UsuarioService();
+    const usuarioService = useMemo(() => new UsuarioService(), []);
 
     useEffect(() => {
-        usuarioService
-            .listarTodos()
-            .then((responce) => {
-                console.log(responce.data);
-                setUsuarios(responce.data);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        if (!usuarios) {
+            usuarioService
+                .listarTodos()
+                .then((responce) => {
+                    console.log(responce.data);
+                    setUsuarios(responce.data);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
     }, [usuarioService, usuarios]);
 
     const openNew = () => {
-        saveUsuario(usuarioVazio);
+        setUsuario(usuarioVazio);
         setSubmitted(false);
         setUsuarioDialog(true);
     };
@@ -65,13 +67,14 @@ const Usuario = () => {
         setDeleteUsuariosDialog(false);
     };
 
-    const saveUsuario = (usuarioVazio: Projeto.Usuario) => {
+    const saveUsuario = () => {
         if (!usuario.id) {
             usuarioService
                 .inserir(usuario)
                 .then((responce) => {
                     setUsuarioDialog(false);
                     setUsuario(usuarioVazio);
+                    setUsuarios(null);
                     toast.current?.show({
                         severity: 'info',
                         summary: 'Informação',
@@ -93,6 +96,7 @@ const Usuario = () => {
                 .then((responce) => {
                     setUsuarioDialog(false);
                     setUsuario(usuarioVazio);
+                    setUsuarios(null);
                     toast.current?.show({
                         severity: 'info',
                         summary: 'Informação',
@@ -128,6 +132,7 @@ const Usuario = () => {
                 .then((responce) => {
                     setUsuario(usuarioVazio);
                     setDeleteUsuarioDialog(false);
+                    setUsuarios(null);
                     toast.current?.show({
                         severity: 'success',
                         summary: 'Successful',
@@ -154,14 +159,46 @@ const Usuario = () => {
         setDeleteUsuariosDialog(true);
     };
 
-    const deleteSelectedUsuarios = () => {};
+    const deleteSelectedUsuarios = () => {
+        Promise.all(
+            selectedUsuarios.map(async (_usuario) => {
+                if (_usuario.id) {
+                    await usuarioService.excluir(_usuario.id);
+                }
+            })
+        )
+            .then((response) => {
+                setUsuarios(null);
+                setSelectedUsuarios([]);
+                setDeleteUsuariosDialog(false);
+                toast.current?.show({
+                    severity: 'success',
+                    summary: 'Sucesso!',
+                    detail: 'Usuarios deletados com Sucesso!',
+                    life: 3000
+                });
+            })
+            .catch((error) => {
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Erro!',
+                    detail: 'Erro ao deletar perfil!',
+                    life: 3000
+                });
+            });
+    };
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, nome: string) => {
         const val = (e.target && e.target.value) || '';
-        let _usuarios = { ...usuario };
-        _usuarios[`${nome}`] = val;
+        //let _usuarios = { ...usuario };
+        //_usuarios[`${nome}`] = val;
 
-        setUsuario(_usuarios);
+        //setUsuario(_usuarios);
+
+        setUsuario((prevUsuario) => ({
+            ...prevUsuario,
+            [nome]: val
+        }));
     };
 
     const leftToolbarTemplate = () => {

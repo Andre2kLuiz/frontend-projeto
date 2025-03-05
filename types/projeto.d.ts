@@ -1,6 +1,5 @@
 declare namespace Projeto {
     type Usuario = {
-        length: number;
         id?: number;
         nome?: string;
         login?: string;
@@ -12,5 +11,10 @@ declare namespace Projeto {
         id?: number;
         nome: string;
         chave: string;
+    };
+
+    type Perfil = {
+        id?: number;
+        descricao: string;
     };
 }
